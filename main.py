@@ -245,113 +245,193 @@ app=FastAPI()
 
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------Sql Alchemy----------------------------------
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker, declarative_base
-from sqlalchemy import Column, Integer, String
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import Session, sessionmaker, declarative_base
+# from sqlalchemy import Column, Integer, String
 
-Database_URL="sqlite:///./mydatabase.db"
-engine = create_engine(Database_URL
-                       ,connect_args={"check_same_thread":False})
-
-
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base() #Base for creating the models
+# Database_URL="sqlite:///./mydatabase.db"
+# engine = create_engine(Database_URL
+#                        ,connect_args={"check_same_thread":False})
 
 
-#-----------------Model---------------------------------------------
-class Todo(Base):
-    __tablename__ = "todos"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(String, index=True)
+# SessionLocal = sessionmaker(bind=engine)
+# Base = declarative_base() #Base for creating the models
 
 
-Base.metadata.create_all(bind=engine)  # creates the table in the database if it doesn't exist
+# #-----------------Model---------------------------------------------
+# class Todo(Base):
+#     __tablename__ = "todos"
+#     id = Column(Integer, primary_key=True, index=True)
+#     title = Column(String, index=True)
+#     description = Column(String, index=True)
 
 
-#---------------------For accessing the database session in the routes--------------------------------
-
-# by this function we can access the database session in the routes and close it after the request is completed
-def  get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Base.metadata.create_all(bind=engine)  # creates the table in the database if it doesn't exist
 
 
-#----------------------------------------CURD OPeration using SQLAlchemy---------------------------------------------------
+# #---------------------For accessing the database session in the routes--------------------------------
 
-#---------------------------------------POst OPeration-------------------
-@app.post("/todos")
-def create_todo(title:str,db:Session=Depends(get_db)):
-    todo=Todo(title=title,description="False")
-    db.add(todo) # added data to db
-    db.commit() # add Confirmed
-    db.refresh(todo) # Data base refreshed  
-    return{
-        "message":"Todo Created",
-        "data":todo
-    }
-
-#--------------------------------------Read Data------------------------------------------
-#Read all data
-
-@app.get("/get_todos")
-def get_todos(db:Session=Depends(get_db)):
-    todos=db.query(Todo).all() # all data included 
-
-    return{
-        "Total":len(todos),
-        "data":todos
-    }
-
-#read Specific data
-@app.get("/Specific_data/{todos_id}")
-def get_specific_todo(todos_id:int,db:Session=Depends(get_db)):
-
-    #
-    todo=db.query(Todo).filter(Todo.id == todos_id).first()
-
-    if todo is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
-
-    return{
-        "id":todo.id,
-        "data":todo
-    }
+# # by this function we can access the database session in the routes and close it after the request is completed
+# def  get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
 
 
-#---------------------------------------Updated Data-------------------------------
-#Updata data
-@app.put("/todos/{todo_id}")
-def updaed_todo(todo_id:int,title:str,db:Session=Depends(get_db)):
-    todo=db.query(Todo).filter(Todo.id==todo_id).first()
-    todo.title=title
-    db.commit()
-    db.refresh(todo)
+# #----------------------------------------CURD OPeration using SQLAlchemy---------------------------------------------------
 
-    return{
-        "Message":"Sucessfully Updatd",
-        "data":todo
-    }
-#---------------------------------------Delete---------------------------------
-@app.delete("/todos_delete/{todo_id}")
-def delete_todos(todo_id:int,db:Session=Depends(get_db)):
-    todo=db.query(Todo).filter(Todo.id==todo_id).first()
+# #---------------------------------------POst OPeration-------------------
+# @app.post("/todos")
+# def create_todo(title:str,db:Session=Depends(get_db)):
+#     todo=Todo(title=title,description="False")
+#     db.add(todo) # added data to db
+#     db.commit() # add Confirmed
+#     db.refresh(todo) # Data base refreshed  
+#     return{
+#         "message":"Todo Created",
+#         "data":todo
+#     }
 
-    if todo is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
+# #--------------------------------------Read Data------------------------------------------
+# #Read all data
 
-    db.delete(todo)
-    db.commit()
+# @app.get("/get_todos")
+# def get_todos(db:Session=Depends(get_db)):
+#     todos=db.query(Todo).all() # all data included 
 
-    return{
-        "message":"Todo Deleted Successfully",
-        "id":todo_id
-    }
+#     return{
+#         "Total":len(todos),
+#         "data":todos
+#     }
 
+# #read Specific data
+# @app.get("/Specific_data/{todos_id}")
+# def get_specific_todo(todos_id:int,db:Session=Depends(get_db)):
+
+#     #
+#     todo=db.query(Todo).filter(Todo.id == todos_id).first()
+
+#     if todo is None:
+#         raise HTTPException(status_code=404, detail="Todo not found")
+
+#     return{
+#         "id":todo.id,
+#         "data":todo
+#     }
+
+
+# #---------------------------------------Updated Data-------------------------------
+# #Updata data
+# @app.put("/todos/{todo_id}")
+# def updaed_todo(todo_id:int,title:str,db:Session=Depends(get_db)):
+#     todo=db.query(Todo).filter(Todo.id==todo_id).first()
+#     todo.title=title
+#     db.commit()
+#     db.refresh(todo)
+
+#     return{
+#         "Message":"Sucessfully Updatd",
+#         "data":todo
+#     }
+# #---------------------------------------Delete---------------------------------
+# @app.delete("/todos_delete/{todo_id}")
+# def delete_todos(todo_id:int,db:Session=Depends(get_db)):
+#     todo=db.query(Todo).filter(Todo.id==todo_id).first()
+
+#     if todo is None:
+#         raise HTTPException(status_code=404, detail="Todo not found")
+
+#     db.delete(todo)
+#     db.commit()
+
+#     return{
+#         "message":"Todo Deleted Successfully",
+#         "id":todo_id
+#     }
+
+# #------------------------------------Async Programming----------------------------------------
+# import time
+# import asyncio
+
+# @app.get("/")
+# async def Async():
+#     await asyncio.sleep(78)
+#     return{
+#         "message":"Async API"
+#     }
 #--------------------------------------------------------------------------------
+#===============================================================================================
+#=======================================================================================
+#------------------------------------Authentication----------------------------------------
+#====================================================================================================
+#======================================================================================================
 
+
+
+from fastapi import FastAPI, HTTPException,Depends,Header
+from jose import jwt 
+from datetime import datetime,timedelta,timezone
+
+app=FastAPI()
+SECREATE_KEY="kunal"
+ALGORITHM="HS256"
+
+
+#Create Token
+def create_token(data:dict):
+    to_encode=data.copy()
+    expire=datetime.now(timezone.utc) + timedelta(minutes=30)
+
+    to_encode.update(
+        {
+            "exp":expire
+        }
+    )
+
+    token=jwt.encode(to_encode,SECREATE_KEY,algorithm=ALGORITHM)
+
+    return token
+
+
+#login api token generate 
+@app.post("/login")
+def login(username:str,password:str):
+    if username!="admin" or password!="1234":
+        raise HTTPException (
+            status_code=401,
+            detail="invalide Username and password"
+        )
+    token=create_token(
+        {
+            "sub":username
+        }
+    )
+    return{
+        "acces_token":token 
+    }
+
+
+#Token verificiation 
+def verify_token(token:str=Header(None)):
+
+    try :
+        payload=jwt.decode(token,SECREATE_KEY,algorithms=ALGORITHM)
+        return payload
+    except:
+        raise HTTPException(
+            
+                status_code=401,
+                detail="Invalide Creditianals"
+            
+        )
+#protected Routs
+@app.get("/secure")
+def secure_data(user=Depends(verify_token)):
+    return{
+        "message":"Secure Data Accessed",
+        "user":user
+    }
 
 
