@@ -1,0 +1,494 @@
+from fastapi  import FastAPI ,status ,HTTPException,Request,Depends,Header
+from fastapi.responses import FileResponse,JSONResponse
+from pydantic import BaseModel
+app=FastAPI()
+
+
+# class Address(BaseModel):
+#     city:str
+#     pincode:int
+
+# class User(BaseModel):
+#     user:str
+#     age:int
+#     email:str
+#     address:Address
+
+# #User_Route
+# #
+# # @app.get("/user/{user_id}")
+# # def get_user(user_id: int):
+# #     return {"message": f"User with ID {user_id} is Kunal, Raj, or Shivam."}
+
+
+# @app.get("/users")
+# def get_users(name: str=None):
+#     return {"Name":name}
+
+# @app.get("/products")
+# def get_product(Limit:int=10):
+#     return {"Limit":Limit}
+
+
+# # handling Multiple Query params 
+# @app.get("/getuser")
+# def get_users(name:str=None,id=int):
+#     return{
+#         "name":name,
+#         "id":id
+#     }
+
+
+
+# # data Validation 
+# @app.post("/create_user")
+# def create_user(user:User):
+#     return {
+#         "message":"User Created",
+#         "User":user
+#             }
+
+
+#-------------------------------------------------------------------------
+#using path and query params together 
+
+# users=[]
+
+# class User(BaseModel):
+#     name:str
+#     id:int
+
+# @app.post("/users") 
+# def create_user(user:User):
+#     users.append(user)
+#     return{
+#         "message":"User Created",
+#         "data":user
+#     }
+
+# @app.put("/update/{user_id}")
+# def updated_user(user_id:int,user:User,notify:bool= False):
+#     if user_id<len(users):
+#         users[user_id]=user
+#         return{
+#             "message":"User Updated",
+#             "notify":notify,
+#             "data":user
+#         }
+
+
+#     return {"Error": "User not found"}
+
+
+#--------------------------------------------------------------------------
+#TODO Response Model
+
+# class User(BaseModel):
+#     age:int
+#     name:str
+#     password:str
+
+
+# class UserResponce(BaseModel):
+#     age:int
+#     name:str
+
+# @app.get("/users",response_model=UserResponce)
+# def get_user():
+#     return {
+#         "name":"Kunal",
+#         "age":20,
+#         "password":"123456" 
+#     }
+
+#-------------------------------Exception_----------------------------------
+# @app.post("/create_user",status_code=status.HTTP_201_CREATED)
+# def ceate_user():
+#     return {
+#         "message" :"User Created"
+#     }
+
+
+# @app.get("/users/{user_id}")
+# def get_user(user_id:int):
+#     if user_id!=1:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="user Not found" 
+#         )
+
+
+
+# @app.get("/users/{user_id}")
+# def get_user(user_id:int):
+#     if user_id!=1:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="User not found"
+#         )
+    
+#     return{
+#         "id":1,
+#         "name":"Kunal"
+
+#     }
+
+
+#=================================================Exception Handling========================================================
+
+# class UserNotFoundException(Exception):
+#     def __init__(self,name:str):
+#         self.name=name
+
+# #Global Exception Handler
+# #-----------------------------------------------------------------------------------
+# @app.exception_handler(UserNotFoundException)
+# def user_not_found_exception_handler(request:Request,exc:UserNotFoundException):
+#     return JSONResponse(
+#         status_code=404,
+#         content={"message":f"User with name {exc.name} not found"}
+#     )
+
+# #--------------------------------------------------------------------------------------------
+
+# @app.get("/users/{name}")
+# def get_user(name:str):
+#     if name != "Kunal":
+#         raise UserNotFoundException(name)      
+#     return{
+#         "user":name
+#     }  
+#------------------------------------------------------------------------------
+
+
+# Code reusable
+# def common_logic():
+#     return {
+#         "message":"This is common logic"
+#             }
+
+# @app.get("/home")
+# def home(data = Depends(common_logic)):
+#     return data  
+#--------------------------Authorization using dependance Injection------------------------
+# def varify_token(token:str=Header(None)):
+#     if token!= "Kunal":
+#         raise HTTPException(
+#             status_code=401,
+#             detail="Unathorized"
+#         )
+#     return{
+#         "user":"Authorized User"
+#     }
+
+# @app.get("/secure")
+# def secure_data(user=Depends(varify_token)):
+#     return{
+#         "message":"Authorized"
+#     }
+
+
+# # TODO Middle Ware--------------------------------------------------------------------
+
+# from fastapi import FastAPI,Request
+
+# app=FastAPI()
+#----------------------------------------------------------------------
+# @app.middleware("http")
+# async def my_middleware(request:Request,call_next):
+#     print("Request Recivied")
+
+#     responce=await call_next(request)
+
+#     print("Responce sent")
+
+#     return responce
+
+#-----------------------------------------------------------------
+
+# import time
+
+# @app.middleware("http")
+# async def log_middleware(request:Request,call_next):
+#     start_time=time.time()
+
+#     responce = await call_next(request)
+
+#     process_time= time.time()- start_time
+
+#     print(f"Path:{request.url.path} | Time : {process_time}")
+
+#     return responce
+
+
+
+
+#---------------------------Sq-lite Database Connection---------------------------------------------------
+# import sqlite3
+
+# conn=sqlite3.connect("mydatabase.db",check_same_thread=False) # connects to the database and creates a new database if it doesn't exist
+
+# cursor=conn.cursor()  # runs sql commands and queries on the database
+
+# #Runs Quary
+# cursor.execute('''CREATE TABLE IF NOT EXISTS todos(id integer PRIMARY KEY AUTOINCREMENT, 
+#                 title TEXT, description TEXT)''')
+
+# #commits the  query in the database
+# conn.commit()
+
+# @app.get("/")
+# def home():
+#     return {"message":"Welcome to the FastAPI SQLite Example"}
+
+
+
+#---------------------------------------------------------------------------------------------------
+#------------------------------------------Sql Alchemy----------------------------------
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import Session, sessionmaker, declarative_base
+# from sqlalchemy import Column, Integer, String
+
+# Database_URL="sqlite:///./mydatabase.db"
+# engine = create_engine(Database_URL
+#                        ,connect_args={"check_same_thread":False})
+
+
+# SessionLocal = sessionmaker(bind=engine)
+# Base = declarative_base() #Base for creating the models
+
+
+# #-----------------Model---------------------------------------------
+# class Todo(Base):
+#     __tablename__ = "todos"
+#     id = Column(Integer, primary_key=True, index=True)
+#     title = Column(String, index=True)
+#     description = Column(String, index=True)
+
+
+# Base.metadata.create_all(bind=engine)  # creates the table in the database if it doesn't exist
+
+
+# #---------------------For accessing the database session in the routes--------------------------------
+
+# # by this function we can access the database session in the routes and close it after the request is completed
+# def  get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
+
+# #----------------------------------------CURD OPeration using SQLAlchemy---------------------------------------------------
+
+# #---------------------------------------POst OPeration-------------------
+# @app.post("/todos")
+# def create_todo(title:str,db:Session=Depends(get_db)):
+#     todo=Todo(title=title,description="False")
+#     db.add(todo) # added data to db
+#     db.commit() # add Confirmed
+#     db.refresh(todo) # Data base refreshed  
+#     return{
+#         "message":"Todo Created",
+#         "data":todo
+#     }
+
+# #--------------------------------------Read Data------------------------------------------
+# #Read all data
+
+# @app.get("/get_todos")
+# def get_todos(db:Session=Depends(get_db)):
+#     todos=db.query(Todo).all() # all data included 
+
+#     return{
+#         "Total":len(todos),
+#         "data":todos
+#     }
+
+# #read Specific data
+# @app.get("/Specific_data/{todos_id}")
+# def get_specific_todo(todos_id:int,db:Session=Depends(get_db)):
+
+#     #
+#     todo=db.query(Todo).filter(Todo.id == todos_id).first()
+
+#     if todo is None:
+#         raise HTTPException(status_code=404, detail="Todo not found")
+
+#     return{
+#         "id":todo.id,
+#         "data":todo
+#     }
+
+
+# #---------------------------------------Updated Data-------------------------------
+# #Updata data
+# @app.put("/todos/{todo_id}")
+# def updaed_todo(todo_id:int,title:str,db:Session=Depends(get_db)):
+#     todo=db.query(Todo).filter(Todo.id==todo_id).first()
+#     todo.title=title
+#     db.commit()
+#     db.refresh(todo)
+
+#     return{
+#         "Message":"Sucessfully Updatd",
+#         "data":todo
+#     }
+# #---------------------------------------Delete---------------------------------
+# @app.delete("/todos_delete/{todo_id}")
+# def delete_todos(todo_id:int,db:Session=Depends(get_db)):
+#     todo=db.query(Todo).filter(Todo.id==todo_id).first()
+
+#     if todo is None:
+#         raise HTTPException(status_code=404, detail="Todo not found")
+
+#     db.delete(todo)
+#     db.commit()
+
+#     return{
+#         "message":"Todo Deleted Successfully",
+#         "id":todo_id
+#     }
+
+# #------------------------------------Async Programming----------------------------------------
+# import time
+# import asyncio
+
+# @app.get("/")
+# async def Async():
+#     await asyncio.sleep(78)
+#     return{
+#         "message":"Async API"
+#     }
+#--------------------------------------------------------------------------------
+#===============================================================================================
+#=======================================================================================
+#------------------------------------Authentication----------------------------------------
+#====================================================================================================
+#======================================================================================================
+
+
+
+from fastapi import FastAPI, HTTPException,Depends,Header
+from jose import jwt 
+from datetime import datetime,timedelta,timezone
+
+# app=FastAPI()
+# SECREATE_KEY="kunal"
+# ALGORITHM="HS256"
+
+
+# #Create Token
+# def create_token(data:dict):
+#     to_encode=data.copy()
+#     expire=datetime.now(timezone.utc) + timedelta(minutes=30)
+
+#     to_encode.update(
+#         {
+#             "exp":expire
+#         }
+#     )
+
+#     token=jwt.encode(to_encode,SECREATE_KEY,algorithm=ALGORITHM)
+
+#     return token
+
+
+# #login api token generate 
+# @app.post("/login")
+# def login(username:str,password:str):
+#     if username!="admin" or password!="1234":
+#         raise HTTPException (
+#             status_code=401,
+#             detail="invalide Username and password"
+#         )
+#     token=create_token(
+#         {
+#             "sub":username
+#         }
+#     )
+#     return{
+#         "acces_token":token 
+#     }
+
+
+# #Token verificiation 
+# def verify_token(token:str=Header(None)):
+
+#     try :
+#         payload=jwt.decode(token,SECREATE_KEY,algorithms=ALGORITHM)
+#         return payload
+#     except:
+#         raise HTTPException(
+            
+#                 status_code=401,
+#                 detail="Invalide Creditianals"
+            
+#         )
+# #protected Routs
+# @app.get("/secure")
+# def secure_data(user=Depends(verify_token)):
+#     return{
+#         "message":"Secure Data Accessed",
+#         "user":user
+#     }
+
+#----------------------------------------------------------------File Uploading---------------------------------------------------
+from fastapi import FastAPI ,UploadFile,File,HTTPException
+from fastapi.staticfiles import StaticFiles
+import os 
+import shutil
+
+ #Step-1:Ensure Folder Exists
+
+UPLOAD_DIR="upload"
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+#step-2:static file set-up
+# URL:- HTTP://127.0.0.1:8080/FILES/<FILEname>
+app.mount("/files",StaticFiles(directory=UPLOAD_DIR),name="files")
+
+
+#Step-3:upload File  api
+@app.post("/upload")
+def upload_file(file:UploadFile=File(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400,detail="File not Selected")
+
+    filename=os.path.basename(file.filename)
+    file_path=os.path.join(UPLOAD_DIR,filename)
+
+    with open(file_path,"wb") as buffer:
+        shutil.copyfileobj(file.file,buffer)
+
+    return {
+        "message":"File uploaded sucessfullt",
+        "file_name":filename,
+        "file_url":f"/files/{filename}"
+    }
+
+#step-4:get file url api
+@app.get("/files/{filename}")
+def get_file(filename:str):
+    file_path=os.path.join(UPLOAD_DIR,filename)
+
+
+    if not os.path.exists(file_path): 
+        raise HTTPException(status_code=404,detail="File not found")
+
+    return FileResponse(file_path)
+
+    return{
+    
+        "file_url": f"http://127.0.0.1:8000/files/{filename}"
+    }
+
+@app.get("/")
+def home():
+    return{
+        "message":"file uploaded api running"
+    }
+

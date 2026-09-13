@@ -1,5 +1,5 @@
 from fastapi  import FastAPI ,status ,HTTPException,Request,Depends,Header
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse,JSONResponse
 from pydantic import BaseModel
 app=FastAPI()
 
@@ -374,64 +374,121 @@ from fastapi import FastAPI, HTTPException,Depends,Header
 from jose import jwt 
 from datetime import datetime,timedelta,timezone
 
-app=FastAPI()
-SECREATE_KEY="kunal"
-ALGORITHM="HS256"
+# app=FastAPI()
+# SECREATE_KEY="kunal"
+# ALGORITHM="HS256"
 
 
-#Create Token
-def create_token(data:dict):
-    to_encode=data.copy()
-    expire=datetime.now(timezone.utc) + timedelta(minutes=30)
+# #Create Token
+# def create_token(data:dict):
+#     to_encode=data.copy()
+#     expire=datetime.now(timezone.utc) + timedelta(minutes=30)
 
-    to_encode.update(
-        {
-            "exp":expire
-        }
-    )
+#     to_encode.update(
+#         {
+#             "exp":expire
+#         }
+#     )
 
-    token=jwt.encode(to_encode,SECREATE_KEY,algorithm=ALGORITHM)
+#     token=jwt.encode(to_encode,SECREATE_KEY,algorithm=ALGORITHM)
 
-    return token
+#     return token
 
 
-#login api token generate 
-@app.post("/login")
-def login(username:str,password:str):
-    if username!="admin" or password!="1234":
-        raise HTTPException (
-            status_code=401,
-            detail="invalide Username and password"
-        )
-    token=create_token(
-        {
-            "sub":username
-        }
-    )
-    return{
-        "acces_token":token 
+# #login api token generate 
+# @app.post("/login")
+# def login(username:str,password:str):
+#     if username!="admin" or password!="1234":
+#         raise HTTPException (
+#             status_code=401,
+#             detail="invalide Username and password"
+#         )
+#     token=create_token(
+#         {
+#             "sub":username
+#         }
+#     )
+#     return{
+#         "acces_token":token 
+#     }
+
+
+# #Token verificiation 
+# def verify_token(token:str=Header(None)):
+
+#     try :
+#         payload=jwt.decode(token,SECREATE_KEY,algorithms=ALGORITHM)
+#         return payload
+#     except:
+#         raise HTTPException(
+            
+#                 status_code=401,
+#                 detail="Invalide Creditianals"
+            
+#         )
+# #protected Routs
+# @app.get("/secure")
+# def secure_data(user=Depends(verify_token)):
+#     return{
+#         "message":"Secure Data Accessed",
+#         "user":user
+#     }
+
+#----------------------------------------------------------------File Uploading---------------------------------------------------
+from fastapi import FastAPI ,UploadFile,File,HTTPException
+from fastapi.staticfiles import StaticFiles
+import os 
+import shutil
+
+ #Step-1:Ensure Folder Exists
+
+UPLOAD_DIR="upload"
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+#step-2:static file set-up
+# URL:- HTTP://127.0.0.1:8080/FILES/<FILEname>
+app.mount("/files",StaticFiles(directory=UPLOAD_DIR),name="files")
+
+
+#Step-3:upload File  api
+@app.post("/upload")
+def upload_file(file:UploadFile=File(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400,detail="File not Selected")
+
+    filename=os.path.basename(file.filename)
+    file_path=os.path.join(UPLOAD_DIR,filename)
+
+    with open(file_path,"wb") as buffer:
+        shutil.copyfileobj(file.file,buffer)
+
+    return {
+        "message":"File uploaded sucessfullt",
+        "file_name":filename,
+        "file_url":f"/files/{filename}"
     }
 
+#step-4:get file url api
+@app.get("/files/{filename}")
+def get_file(filename:str):
+    file_path=os.path.join(UPLOAD_DIR,filename)
 
-#Token verificiation 
-def verify_token(token:str=Header(None)):
 
-    try :
-        payload=jwt.decode(token,SECREATE_KEY,algorithms=ALGORITHM)
-        return payload
-    except:
-        raise HTTPException(
-            
-                status_code=401,
-                detail="Invalide Creditianals"
-            
-        )
-#protected Routs
-@app.get("/secure")
-def secure_data(user=Depends(verify_token)):
+    if not os.path.exists(file_path): 
+        raise HTTPException(status_code=404,detail="File not found")
+
+    return FileResponse(file_path)
+
     return{
-        "message":"Secure Data Accessed",
-        "user":user
+    
+        "file_url": f"http://127.0.0.1:8000/files/{filename}"
     }
 
-#
+@app.get("/")
+def home():
+    return{
+        "message":"file uploaded api running"
+    }
+
